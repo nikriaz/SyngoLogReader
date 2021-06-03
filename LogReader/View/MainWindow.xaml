@@ -1,0 +1,456 @@
+﻿<Window
+    x:Class="LogReader.MainWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:converters="clr-namespace:LogReader.Converters"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:i="http://schemas.microsoft.com/xaml/behaviors"
+    xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:viewmodel="clr-namespace:LogReader.ViewModel"
+    Title="{Binding Version}"
+    d:DataContext="{d:DesignInstance Type=viewmodel:MessagesViewModel}"
+    Background="{DynamicResource MaterialDesignPaper}"
+    FontFamily="{DynamicResource MaterialDesignFont}"
+    TextElement.FontSize="13"
+    TextElement.FontWeight="Regular"
+    TextElement.Foreground="{DynamicResource MaterialDesignBody}"
+    TextOptions.TextFormattingMode="Ideal"
+    TextOptions.TextRenderingMode="Auto"
+    mc:Ignorable="d">
+
+    <Window.Resources>
+        <ResourceDictionary>
+            <converters:DateTimeConverter x:Key="dateTimeConverter" />
+            <converters:ColorConverter x:Key="colorConverter" />
+            <converters:InverseBooleanConverter x:Key="inverseBooleanConverter" />
+            <BooleanToVisibilityConverter x:Key="BoolToVis" />
+        </ResourceDictionary>
+    </Window.Resources>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="auto" />
+        </Grid.RowDefinitions>
+
+        <ToolBarTray
+            Grid.Row="0"
+            Background="LightGray"
+            IsEnabled="{Binding Path=IsProgress, Converter={StaticResource inverseBooleanConverter}}">
+            <ToolBar
+                Margin="10,0,0,0"
+                Background="LightGray"
+                ClipToBounds="False"
+                Style="{DynamicResource MaterialDesignToolBar}">
+                <Button
+                    Command="{Binding OpenFileCommand}"
+                    Content="{materialDesign:PackIcon Kind=FolderOpen}"
+                    ToolTip="Open Log File" />
+                <Separator />
+                <Button
+                    Command="{Binding CleanDatabaseCommand}"
+                    Content="{materialDesign:PackIcon Kind=CloseCircle}"
+                    IsEnabled="{Binding SomeViewExist}"
+                    ToolBar.OverflowMode="AsNeeded"
+                    ToolTip="Clear All Messages" />
+                <Separator />
+                <StackPanel>
+                    <TextBlock Margin="95,10,0,0">
+                        <Bold>Total Messages:</Bold> <Run Text="{Binding SummaryHeader.TotalMessages}" />
+                    </TextBlock>
+                    <TextBlock Margin="95,5,0,0">
+                        <Bold>Total Period:</Bold><Run Text="{Binding SummaryHeader.PeriodText}" />
+                    </TextBlock>
+                </StackPanel>
+            </ToolBar>
+        </ToolBarTray>
+
+        <DockPanel>
+            <materialDesign:PopupBox DockPanel.Dock="Right" PlacementMode="BottomAndAlignRightEdges">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="auto" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <Image Margin="15,5,15,5" Stretch="Uniform" Height="80">
+                        <Image.Source>
+                            <BitmapImage UriSource="/Images/ma_80.png" />
+                        </Image.Source>
+                    </Image>
+                    <TextBlock
+                        Grid.Column="1"
+                        Margin="0,15,15,5"
+                        VerticalAlignment="Top"
+                        FontSize="12">
+                        <Run Text="{Binding Version}" />
+                        <LineBreak />
+                        <Run Text="© Nikolay Ryazantsev 2021" />
+                        <LineBreak />
+                        <Run Text="MA Praktika Software" />
+                        <LineBreak />
+                        <LineBreak />
+                        <Run Text="Syngo is registered trademark of SIEMENS HEALTHCARE GMBH" />
+                    </TextBlock>
+                </Grid>
+            </materialDesign:PopupBox>
+
+            <ToolBarTray
+                Grid.Row="0"
+                HorizontalAlignment="Right"
+                Background="LightGray"
+                IsEnabled="{Binding Path=IsProgress, Converter={StaticResource inverseBooleanConverter}}">
+                <ToolBar Background="LightGray">
+                    <Button
+                        Command="{Binding ExportToXMLCommand}"
+                        Content="{materialDesign:PackIcon Kind=FileExport}"
+                        IsEnabled="{Binding SomeViewExist}"
+                        ToolTip="Export Current View to XML" />
+                    <Separator />
+                </ToolBar>
+            </ToolBarTray>
+        </DockPanel>
+
+        <materialDesign:DialogHost
+            Grid.Row="1"
+            CloseOnClickAway="True"
+            Identifier="MainDialogHost">
+            <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                <Grid Grid.Row="1">
+                    <Grid.InputBindings>
+                        <KeyBinding Key="Enter" Command="{Binding GoCommand}" />
+                    </Grid.InputBindings>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="250" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="auto" />
+                        <RowDefinition Height="auto" />
+                        <RowDefinition Height="auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+                    <GroupBox
+                        Grid.Row="0"
+                        Margin="15,5,5,5"
+                        materialDesign:ColorZoneAssist.Mode="Standard"
+                        Header="Severity"
+                        Style="{StaticResource MaterialDesignCardGroupBox}">
+                        <ItemsControl ItemsSource="{Binding SeveritiesChecked}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <CheckBox
+                                        Margin="0,4,16,0"
+                                        Content="{Binding Name}"
+                                        IsChecked="{Binding IsChecked}"
+                                        Style="{StaticResource MaterialDesignUserForegroundCheckBox}" />
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </GroupBox>
+                    <GroupBox
+                        Grid.Row="1"
+                        Margin="15,5,5,5"
+                        materialDesign:ColorZoneAssist.Mode="Standard"
+                        Header="Filter"
+                        Style="{StaticResource MaterialDesignCardGroupBox}">
+                        <StackPanel>
+                            <TextBox
+                                VerticalAlignment="Center"
+                                materialDesign:HintAssist.Hint="Message Text"
+                                Style="{StaticResource MaterialDesignFloatingHintTextBox}"
+                                Text="{Binding MessageTextFilter, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}" />
+                            <TextBox
+                                VerticalAlignment="Center"
+                                materialDesign:HintAssist.Hint="Message ID"
+                                Style="{StaticResource MaterialDesignFloatingHintTextBox}"
+                                Text="{Binding MessageIdFilter, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, ValidatesOnNotifyDataErrors=True}" />
+                            <TextBox
+                                VerticalAlignment="Center"
+                                materialDesign:HintAssist.Hint="Source Name"
+                                Style="{StaticResource MaterialDesignFloatingHintTextBox}"
+                                Text="{Binding SourceNameFilter, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}" />
+                        </StackPanel>
+                    </GroupBox>
+                    <GroupBox
+                        Grid.Row="2"
+                        Margin="15,5,5,5"
+                        materialDesign:ColorZoneAssist.Mode="Standard"
+                        Header="Specify Time Range"
+                        Style="{StaticResource MaterialDesignCardGroupBox}">
+                        <StackPanel>
+                            <RadioButton
+                                x:Name="absoluteTimeRange"
+                                Margin="0,0,16,0"
+                                Content="Absolute Time Range"
+                                IsChecked="{Binding IsAbsoluteTimeRange}"
+                                Style="{DynamicResource MaterialDesignUserForegroundRadioButton}" />
+                            <DatePicker
+                                Width="100"
+                                materialDesign:CalendarAssist.IsHeaderVisible="False"
+                                materialDesign:HintAssist.Hint="from"
+                                IsEnabled="{Binding ElementName=absoluteTimeRange, Path=IsChecked}"
+                                SelectedDate="{Binding FromDtFilter, Converter={StaticResource dateTimeConverter}, ConverterParameter=from}"
+                                Style="{StaticResource MaterialDesignFloatingHintDatePicker}" />
+                            <materialDesign:TimePicker
+                                Width="100"
+                                Is24Hours="True"
+                                IsEnabled="{Binding ElementName=absoluteTimeRange, Path=IsChecked}"
+                                SelectedTime="{Binding FromDtFilter}" />
+                            <DatePicker
+                                Width="100"
+                                materialDesign:CalendarAssist.IsHeaderVisible="False"
+                                materialDesign:HintAssist.Hint="to"
+                                IsEnabled="{Binding ElementName=absoluteTimeRange, Path=IsChecked}"
+                                SelectedDate="{Binding ToDtFilter, Converter={StaticResource dateTimeConverter}, ConverterParameter=to}"
+                                Style="{StaticResource MaterialDesignFloatingHintDatePicker}" />
+                            <materialDesign:TimePicker
+                                Width="100"
+                                Is24Hours="True"
+                                IsEnabled="{Binding ElementName=absoluteTimeRange, Path=IsChecked}"
+                                SelectedTime="{Binding ToDtFilter}" />
+                            <Separator Style="{StaticResource MaterialDesignLightSeparator}" />
+                            <RadioButton
+                                x:Name="relativeTimeRange"
+                                Margin="0,0,16,0"
+                                Content="Relative Time Range"
+                                Style="{DynamicResource MaterialDesignUserForegroundRadioButton}" />
+                            <StackPanel
+                                Margin="55,5,0,0"
+                                VerticalAlignment="Bottom"
+                                Orientation="Horizontal">
+                                <ComboBox
+                                    MinWidth="75"
+                                    materialDesign:TextFieldAssist.SuffixText="{Binding RelativeUnits.DaysOrHours}"
+                                    IsEditable="True"
+                                    IsEnabled="{Binding ElementName=relativeTimeRange, Path=IsChecked}"
+                                    ItemsSource="{Binding RelativeDurationsList}">
+                                    <i:Interaction.Triggers>
+                                        <i:EventTrigger EventName="LostFocus">
+                                            <i:InvokeCommandAction Command="{Binding TrimTextCommand}" />
+                                        </i:EventTrigger>
+                                    </i:Interaction.Triggers>
+                                    <ComboBox.Text>
+                                        <Binding
+                                            Mode="TwoWay"
+                                            Path="RelativeDuration"
+                                            UpdateSourceTrigger="PropertyChanged"
+                                            ValidatesOnNotifyDataErrors="True">
+                                        </Binding>
+                                    </ComboBox.Text>
+                                </ComboBox>
+                                <Button
+                                    Width="23"
+                                    Height="23"
+                                    Margin="10,0,0,0"
+                                    Command="{Binding SwapRelativeUnitsCommand}"
+                                    IsEnabled="{Binding ElementName=relativeTimeRange, Path=IsChecked}"
+                                    Style="{StaticResource MaterialDesignIconButton}"
+                                    ToolTip="Toggle days and hours">
+                                    <materialDesign:PackIcon
+                                        Width="16"
+                                        Height="16"
+                                        Kind="{Binding RelativeUnits.IconName}" />
+                                </Button>
+                            </StackPanel>
+                        </StackPanel>
+                    </GroupBox>
+
+                    <Canvas
+                        Name="sizingCanvas"
+                        Grid.Row="0"
+                        Grid.RowSpan="4"
+                        Grid.Column="1"
+                        Margin="2">
+                        <DataGrid
+                            Name="ListViewLogList"
+                            Width="{Binding ActualWidth, ElementName=sizingCanvas}"
+                            Height="{Binding ActualHeight, ElementName=sizingCanvas}"
+                            materialDesign:DataGridAssist.CellPadding="4 4 4 4"
+                            materialDesign:DataGridAssist.ColumnHeaderPadding="4 4 4 4"
+                            AutoGenerateColumns="False"
+                            CanUserAddRows="False"
+                            EnableColumnVirtualization="True"
+                            EnableRowVirtualization="True"
+                            IsReadOnly="True"
+                            ItemsSource="{Binding LogList, Mode=OneWay}"
+                            RowHeight="23"
+                            ScrollViewer.HorizontalScrollBarVisibility="Auto"
+                            ScrollViewer.VerticalScrollBarVisibility="Visible"
+                            VirtualizingPanel.VirtualizationMode="Recycling">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Width="40" Header="S.">
+                                    <DataGridTextColumn.CellStyle>
+                                        <Style TargetType="{x:Type DataGridCell}">
+                                            <Setter Property="Template">
+                                                <Setter.Value>
+                                                    <ControlTemplate TargetType="{x:Type DataGridCell}">
+                                                        <TextBlock
+                                                            x:Name="SeverityCell"
+                                                            Margin="4,0,0,0"
+                                                            VerticalAlignment="Center"
+                                                            Foreground="{Binding Severity, Converter={StaticResource colorConverter}}"
+                                                            Text="{Binding Severity}" />
+                                                    </ControlTemplate>
+                                                </Setter.Value>
+                                            </Setter>
+                                        </Style>
+                                    </DataGridTextColumn.CellStyle>
+                                </DataGridTextColumn>
+                                <DataGridTextColumn Width="150" Header="Date/Time">
+                                    <DataGridTextColumn.CellStyle>
+                                        <Style TargetType="{x:Type DataGridCell}">
+                                            <Setter Property="Template">
+                                                <Setter.Value>
+                                                    <ControlTemplate TargetType="{x:Type DataGridCell}">
+                                                        <TextBlock
+                                                            Margin="4,0,0,0"
+                                                            VerticalAlignment="Center"
+                                                            Foreground="{Binding Severity, Converter={StaticResource colorConverter}}"
+                                                            Text="{Binding EventDateTime, StringFormat='dd-MMM-yyyy HH:mm:ss'}" />
+                                                    </ControlTemplate>
+                                                </Setter.Value>
+                                            </Setter>
+                                        </Style>
+                                    </DataGridTextColumn.CellStyle>
+                                </DataGridTextColumn>
+                                <DataGridTextColumn Width="50" Header="ID">
+                                    <DataGridTextColumn.CellStyle>
+                                        <Style TargetType="{x:Type DataGridCell}">
+                                            <Setter Property="Template">
+                                                <Setter.Value>
+                                                    <ControlTemplate TargetType="{x:Type DataGridCell}">
+                                                        <TextBlock
+                                                            Margin="4,0,0,0"
+                                                            VerticalAlignment="Center"
+                                                            Cursor="Hand"
+                                                            Foreground="Blue"
+                                                            Text="{Binding EventId}"
+                                                            TextDecorations="Underline" />
+                                                    </ControlTemplate>
+                                                </Setter.Value>
+                                            </Setter>
+                                        </Style>
+                                    </DataGridTextColumn.CellStyle>
+                                </DataGridTextColumn>
+                                <DataGridTextColumn Width="100" Header="Source">
+                                    <DataGridTextColumn.CellStyle>
+                                        <Style TargetType="{x:Type DataGridCell}">
+                                            <Setter Property="Template">
+                                                <Setter.Value>
+                                                    <ControlTemplate TargetType="{x:Type DataGridCell}">
+                                                        <TextBlock
+                                                            Margin="4,0,0,0"
+                                                            VerticalAlignment="Center"
+                                                            Foreground="{Binding Severity, Converter={StaticResource colorConverter}}"
+                                                            Text="{Binding SourceName}" />
+                                                    </ControlTemplate>
+                                                </Setter.Value>
+                                            </Setter>
+                                        </Style>
+                                    </DataGridTextColumn.CellStyle>
+                                </DataGridTextColumn>
+                                <DataGridTextColumn Width="35" Header="Seq.">
+                                    <DataGridTextColumn.CellStyle>
+                                        <Style TargetType="{x:Type DataGridCell}">
+                                            <Setter Property="Template">
+                                                <Setter.Value>
+                                                    <ControlTemplate TargetType="{x:Type DataGridCell}">
+                                                        <TextBlock
+                                                            Margin="4,0,0,0"
+                                                            VerticalAlignment="Center"
+                                                            Foreground="{Binding Severity, Converter={StaticResource colorConverter}}"
+                                                            Text="{Binding Sequence}" />
+                                                    </ControlTemplate>
+                                                </Setter.Value>
+                                            </Setter>
+                                        </Style>
+                                    </DataGridTextColumn.CellStyle>
+                                </DataGridTextColumn>
+                                <DataGridTextColumn Header="Message Text">
+                                    <DataGridTextColumn.CellStyle>
+                                        <Style TargetType="{x:Type DataGridCell}">
+                                            <Setter Property="Template">
+                                                <Setter.Value>
+                                                    <ControlTemplate TargetType="{x:Type DataGridCell}">
+                                                        <TextBlock
+                                                            Margin="4,0,0,0"
+                                                            VerticalAlignment="Center"
+                                                            Foreground="{Binding Severity, Converter={StaticResource colorConverter}}"
+                                                            Text="{Binding FTSMessage.MessageText}" />
+                                                    </ControlTemplate>
+                                                </Setter.Value>
+                                            </Setter>
+                                        </Style>
+                                    </DataGridTextColumn.CellStyle>
+                                </DataGridTextColumn>
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </Canvas>
+                </Grid>
+            </ScrollViewer>
+        </materialDesign:DialogHost>
+        
+        <Border Grid.Row="2" Background="DimGray" />
+
+        <Rectangle
+            Grid.Row="2"
+            Height="3"
+            Margin="0,-2,0,0"
+            VerticalAlignment="Top"
+            Fill="LightGray" />
+        <ProgressBar
+            Grid.Row="2"
+            Height="3"
+            Margin="0,-2,0,0"
+            VerticalAlignment="Top"
+            Foreground="Khaki"
+            IsIndeterminate="True"
+            Visibility="{Binding IsProgress, Converter={StaticResource BoolToVis}, FallbackValue=Hidden}" />
+        <TextBlock
+            Grid.Row="2"
+            Margin="25,0,0,0"
+            VerticalAlignment="Center"
+            FontSize="16"
+            Foreground="Khaki">
+            <Bold>Status:</Bold> <Run FontStyle="Italic" Text="{Binding StatusText, Mode=OneWay}" />
+        </TextBlock>
+        <StackPanel
+            Grid.Row="2"
+            Margin="0,0,5,0"
+            HorizontalAlignment="Right"
+            VerticalAlignment="Center"
+            Orientation="Horizontal">
+            <Rectangle
+                Width="1"
+                Margin="2"
+                VerticalAlignment="Stretch"
+                Stroke="Khaki" />
+            <Button
+                Width="100"
+                Command="{Binding AbortCommand}"
+                Content="ABORT"
+                Foreground="Khaki"
+                IsEnabled="{Binding Path=IsProgress}"
+                Style="{StaticResource MaterialDesignFlatButton}" />
+            <Rectangle
+                Width="1"
+                Margin="2"
+                VerticalAlignment="Stretch"
+                Stroke="Khaki" />
+            <Button
+                Width="100"
+                Command="{Binding GoCommand}"
+                Content="GO"
+                Foreground="Khaki"
+                IsEnabled="{Binding Path=IsProgress, Converter={StaticResource inverseBooleanConverter}}"
+                Style="{StaticResource MaterialDesignFlatButton}" />
+            <Rectangle
+                Width="1"
+                Margin="2"
+                VerticalAlignment="Stretch"
+                Stroke="Khaki" />
+        </StackPanel>
+    </Grid>
+</Window>
