@@ -30,7 +30,7 @@ Most of these features do not exist in the integrated reader:
 *  Some useful current log statistics
 
 # Who am I and Why did I create this utility?
-[![Ask Me Anything !](https://img.shields.io/badge/Ask%20me-anything-1abc9c.svg)](https://GitHub.com/Naereen/ama)
+[![Ask Me Anything !](https://img.shields.io/badge/Ask%20me-anything-1abc9c.svg)](https://github.com/nikriaz/SyngoLogReader/discussions)
 
 I'm passionate Siemens CSE (AX, CT and MI) so I just found that I need such utility. I am also very keen on IT and C# so this is a dream attempt to merge those two worlds. Also, this small-scale but interesting project is a showcase of my abilities and style in programming. Feel free to contact me in case of some job offers, project offers, start-ups or further emerging of this log reader project.
 
